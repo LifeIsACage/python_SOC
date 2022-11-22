@@ -6,6 +6,7 @@ import tkintermapview
 import subprocess
 import time
 import pickle
+import os
 
 class App(customtkinter.CTk):
     SERVER_SOCKETS= [] 
@@ -116,7 +117,7 @@ class App(customtkinter.CTk):
             t4 = threading.Thread(target=create_file_name_socket)
             t4.daemon = True
             t4.start()
-            print("FILE_TRANSFER: Server started.")
+            print("DICT_TRANSFER: Server started.")
 
         def create_file_name_socket():
             HOST = "127.0.0.2"  # Standard loopback interface address (localhost)
@@ -126,19 +127,52 @@ class App(customtkinter.CTk):
                 self.SERVER_SOCKETS.append(s)
                 # Continue
                 s.bind((HOST, PORT))
-                print("FILE_TRANSFER: Listening for clients.")
+                print("DICT_TRANSFER: Listening for clients.")
                 s.listen()
                 conn, addr = s.accept()
                 
                 # Accept the pickle list and print it
                 with conn:
-                    print(f"FILE_TRANSFER: Connected by {addr}")
+                    print(f"DICT_TRANSFER: Connected by {addr}")
                     data = conn.recv(1024)
                     data = pickle.loads(data)
                     print(data)
 
-                  
+        def start_file_transfer_socket():
+            t5 = threading.Thread(target=create_file_transfer_socket)
+            t5.daemon = True
+            t5.start()
+            print("FILE_TRANSFER: Server started.")
+
+        def create_file_transfer_socket():
+            HOST = "127.0.0.4"
+            PORT = 65434
+            
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind((HOST, PORT))
+                s.listen()
+                while True:
+                    conn, addr = s.accept()
+
+                    while True:
+                        msg = conn.recv(1024).decode("utf-8")
+                        cmd, data = msg.split(":")
+
+                        if cmd == "FILENAME":
+                            new_file = open(data, "w")
+                            print("Created File")
+                        elif cmd == "DATA":
+                            new_file.write(data)
+                            print("Writing Data")
+                        elif cmd == "FINISH":
+                            new_file.close()
+                            print("Finished writing data")
+                        elif cmd == "CLOSE":
+                            conn.close()
+                            break
+            
         start_file_name_socket()
+        start_file_transfer_socket()
 
         #! CLI SOCKET SEGMENT
         def start_CLI_socket():
@@ -148,7 +182,7 @@ class App(customtkinter.CTk):
 
         def create_CLI_socket():
             global cli
-            HOST = "192.168.0.103"  # Standard loopback interface address (localhost)
+            HOST = "127.0.0.1"  # Standard loopback interface address (localhost)
             PORT = 12345  # Port to listen on (non-privileged ports are > 1023)
 
             #? This makes sure that we dont loose connection for too long
