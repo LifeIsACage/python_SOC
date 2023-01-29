@@ -1,0 +1,11 @@
+os
+glob
+socket
+pickle
+threading
+time
+queue
+tkintermapview
+customtkinter
+tkinter
+subprocess
